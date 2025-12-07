@@ -108,9 +108,9 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import BarLogo from '@/components/BarLogo.vue'; 
-import Button from '@/components/UI/Button.vue'; 
-import Input from '@/components/UI/Input.vue'; 
-import Label from '@/components/UI/Label.vue'; 
+import Button from '@/components/UI/button.vue'; 
+import Input from '@/components/UI/input.vue'; 
+import Label from '@/components/UI/label.vue'; 
 import { Eye, EyeOff, Lock, User, ArrowRight } from 'lucide-vue-next'; 
 import barBgImage from '@/assets/bar-bg.jpg'; 
 

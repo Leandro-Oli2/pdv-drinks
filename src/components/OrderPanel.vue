@@ -90,8 +90,8 @@
 </template>
 
 <script setup lang="ts">
-import Button from '@/components/UI/Button.vue';
-import Input from '@/components/UI/Input.vue';
+import Button from '@/components/UI/button.vue';
+import Input from '@/components/UI/input.vue';
 import { Wine, Minus, Plus, Trash2, Send } from 'lucide-vue-next';
 import type { OrderItem } from '@/data/mockData'; 
 

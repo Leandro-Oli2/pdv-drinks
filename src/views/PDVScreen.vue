@@ -134,8 +134,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import Button from '@/components/UI/Button.vue';
-import Input from '@/components/UI/Input.vue';
+import Button from '@/components/UI/button.vue';
+import Input from '@/components/UI/input.vue';
 import BarLogo from '@/components/BarLogo.vue';
 import OrderPanel from '@/components/OrderPanel.vue'; 
 import { Wine, Coffee, UtensilsCrossed, Soup, Search, LogOut, Menu, X } from 'lucide-vue-next';

@@ -333,8 +333,8 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 // Componentes UI (Ajuste o caminho se necessário)
-import Button from '@/components/UI/Button.vue'; 
-import Input from '@/components/UI/Input.vue'; 
+import Button from '@/components/UI/button.vue'; 
+import Input from '@/components/UI/input.vue'; 
 
 // Ícones
 import { Wine, UtensilsCrossed, Users, TrendingUp, Plus, Edit2, Trash2, LogOut, Package, ChefHat, Percent } from 'lucide-vue-next'; 
