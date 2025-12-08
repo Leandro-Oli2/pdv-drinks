@@ -511,7 +511,7 @@
                 Cancelar
             </Button>
             <Button variant="destructive" type="button" @click="confirmDeletion">
-                Excluir Permanentemente
+                Excluir
             </Button>
         </div>
     </Modal>

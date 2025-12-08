@@ -9,6 +9,15 @@
           <div class="flex items-center gap-2 sm:gap-4">
             
             <Button 
+              variant="ghost" 
+              size="icon" 
+              @click="router.push('/orders')" 
+              title="Ver Comandas Abertas"
+            >
+              <FileText class="h-5 w-5 text-primary" />
+            </Button>
+
+            <Button 
               variant="outline" 
               size="icon" 
               class="lg:hidden relative"
@@ -138,7 +147,7 @@ import Button from '@/components/UI/button.vue';
 import Input from '@/components/UI/input.vue';
 import BarLogo from '@/components/BarLogo.vue';
 import OrderPanel from '@/components/OrderPanel.vue'; 
-import { Wine, Coffee, UtensilsCrossed, Soup, Search, LogOut, Menu, X } from 'lucide-vue-next';
+import { Wine, Coffee, UtensilsCrossed, Soup, Search, LogOut, Menu, X, FileText } from 'lucide-vue-next';
 import { useAppStore } from '@/stores/drinkStore'; 
 import type { Product, OrderItem, ProductCategory } from '@/data/mockData'; 
 
