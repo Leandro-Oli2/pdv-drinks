@@ -46,7 +46,7 @@
             >
               <Minus class="h-3 w-3" />
             </Button>
-            <span class="w-6 text-center text-sm font-medium">
+            <span class="w-6 text-center text-sm font-medium text-foreground">
               {{ item.quantity }}
             </span>
             <Button

@@ -32,8 +32,8 @@
               <p class="text-xs text-muted-foreground">{{ stat.label }}</p>
               <p class="text-2xl lg:text-3xl font-display font-bold text-foreground mt-1">{{ stat.value }}</p>
             </div>
-            <div :class="`w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-secondary flex items-center justify-center`">
-              <component :is="stat.icon" :class="['w-5 h-5 lg:w-6 lg:h-6', stat.color]" />
+            <div :class="`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${stat.color}`">
+              <component :is="stat.icon" class="w-5 h-5 lg:w-6 lg:h-6" />
             </div>
           </div>
         </div>
@@ -80,7 +80,7 @@
               {{ cat === 'all' ? 'Todos' : getCategoryLabel(cat) }}
             </Button>
           </div>
-          <Button variant="premium" class="flex items-center gap-2 flex-shrink-0">
+          <Button variant="premium" class="flex items-center gap-2 flex-shrink-0" @click="startCreate">
             <Plus class="w-4 h-4" />
             Novo Produto
           </Button>
@@ -100,8 +100,8 @@
                 class="w-full h-full object-cover"
               />
               <div class="absolute top-3 right-3">
-                <span :class="`px-3 py-1 rounded-full text-xs font-medium ${
-                  product.available ? 'bg-black/80 text-success' : 'bg-black/80 text-destructive'
+                <span :class="`px-3 py-1 rounded-full text-xs font-medium bg-black/80 ${
+                  product.available ? 'text-success' : 'text-destructive'
                 }`">
                   {{ product.available ? 'Disponível' : 'Indisponível' }}
                 </span>
@@ -125,10 +125,10 @@
                   </span>
                 </div>
                 <div class="flex gap-2">
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" @click="startEdit(product)">
                     <Edit2 class="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="icon" class="text-destructive hover:text-destructive" @click="deleteItem(product.id, product.name)">
                     <Trash2 class="w-4 h-4" />
                   </Button>
                 </div>
@@ -146,7 +146,7 @@
       <div v-else-if="activeTab === 'waiters'" class="space-y-6 animate-fade-in">
         <div class="flex justify-between items-center">
           <h2 class="text-xl font-display font-semibold text-foreground">Equipe de Garçons</h2>
-          <Button variant="premium" class="flex items-center gap-2">
+          <Button variant="premium" class="flex items-center gap-2" @click="startCreateWaiter">
             <Plus class="w-4 h-4" />
             Novo Garçom
           </Button>
@@ -181,11 +181,11 @@
               </span>
             </div>
             <div class="flex gap-2 mt-4 pt-4 border-t border-border">
-              <Button variant="secondary" size="sm" class="flex-1">
+              <Button variant="secondary" size="sm" class="flex-1" @click="startEditWaiter(waiter)">
                 <Edit2 class="w-4 h-4 mr-2" />
                 Editar
               </Button>
-              <Button variant="ghost" size="sm" class="text-destructive hover:text-destructive">
+              <Button variant="ghost" size="sm" class="text-destructive hover:text-destructive" @click="deleteWaiter(waiter.id, waiter.name)">
                 <Trash2 class="w-4 h-4" />
               </Button>
             </div>
@@ -210,7 +210,7 @@
 
         <div class="flex justify-between items-center flex-wrap gap-2">
           <h3 class="text-lg font-display font-semibold text-foreground">Regras Configuradas</h3>
-          <Button variant="premium" class="flex items-center gap-2 flex-shrink-0">
+          <Button variant="premium" class="flex items-center gap-2 flex-shrink-0" @click="startCreateRule">
             <Plus class="w-4 h-4" />
             Nova Regra
           </Button>
@@ -270,10 +270,10 @@
                   }`">
                     {{ rule.isActive ? 'Ativa' : 'Inativa' }}
                   </span>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" @click="startEditRule(rule)">
                     <Edit2 class="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="icon" class="text-destructive hover:text-destructive" @click="deleteRule(rule.id, getProduct(rule.productId).name)">
                     <Trash2 class="w-4 h-4" />
                   </Button>
                 </div>
@@ -316,46 +316,251 @@
               <Input type="number" placeholder="20" min="1" />
             </div>
             <div class="flex items-end col-span-2 md:col-span-1">
-              <Button variant="premium" class="w-full">
+              <Button variant="premium" class="w-full" @click="startCreateRule">
                 <Plus class="w-4 h-4 mr-2" />
-                Adicionar
+                Adicionar (Abrir Formulário)
               </Button>
             </div>
           </div>
         </div>
       </div>
     </main>
+    
+    <Modal v-if="isEditing || isCreating" @close="cancelAction">
+        
+        <template #title>
+            {{ isCreating ? 'Criar Novo Produto' : `Editar Produto: ${selectedProduct?.name}` }}
+        </template>
+
+        <form @submit.prevent="saveProduct" class="space-y-4" v-if="selectedProduct">
+            
+            <div class="space-y-2">
+                <label class="text-sm text-muted-foreground block">Nome</label>
+                <Input v-model="selectedProduct.name" type="text" required />
+            </div>
+
+            <div class="space-y-2" v-if="isCreating">
+                <label class="text-sm text-muted-foreground block">Categoria</label>
+                <select v-model="selectedProduct.category" class="w-full h-11 rounded-lg border border-border bg-input px-4 text-foreground">
+                    <option value="drinks">Drinks</option>
+                    <option value="food">Pratos</option>
+                    <option value="portions">Porções</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-sm text-muted-foreground block">Preço Atual (R$)</label>
+                    <Input v-model.number="selectedProduct.price" type="number" step="0.01" required />
+                </div>
+                <div class="space-y-2 flex flex-col justify-end">
+                    <label class="text-sm text-muted-foreground block">Status</label>
+                    <select v-model="selectedProduct.available" class="w-full h-11 rounded-lg border border-border bg-input px-4 text-foreground">
+                        <option :value="true">Disponível</option>
+                        <option :value="false">Indisponível</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <label class="text-sm text-muted-foreground block">Descrição</label>
+                <textarea v-model="selectedProduct.description" class="w-full h-20 rounded-lg border border-border bg-input p-4 text-foreground resize-none"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <Button variant="secondary" type="button" @click="cancelAction">
+                    Cancelar
+                </Button>
+                <Button variant="default" type="submit">
+                    {{ isCreating ? 'Criar Produto' : 'Salvar Alterações' }}
+                </Button>
+            </div>
+        </form>
+    </Modal>
+    
+    <Modal v-if="isEditingWaiter || isCreatingWaiter" @close="cancelWaiterAction">
+        
+        <template #title>
+            {{ isCreatingWaiter ? 'Cadastrar Novo Garçom' : `Editar Garçom: ${selectedWaiter?.name}` }}
+        </template>
+
+        <form @submit.prevent="saveWaiter" class="space-y-4" v-if="selectedWaiter">
+            
+            <div class="space-y-2">
+                <label class="text-sm text-muted-foreground block">Nome Completo</label>
+                <Input v-model="selectedWaiter.name" type="text" required />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-sm text-muted-foreground block">Email (Matrícula)</label>
+                    <Input v-model="selectedWaiter.email" type="email" :disabled="isEditingWaiter" required />
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm text-muted-foreground block">Telefone</label>
+                    <Input v-model="selectedWaiter.phone" type="text" placeholder="(99) 99999-9999" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-sm text-muted-foreground block">
+                        {{ isCreatingWaiter ? 'Senha Inicial' : 'Nova Senha (opcional)' }}
+                    </label>
+                    <Input 
+                        v-model="selectedWaiter.password" 
+                        type="password" 
+                        :required="isCreatingWaiter" 
+                        placeholder="********" 
+                    />
+                    <p v-if="isEditingWaiter" class="text-xs text-muted-foreground">
+                        Deixe vazio para manter a senha atual.
+                    </p>
+                </div>
+                <div class="space-y-2 flex flex-col justify-end">
+                    <label class="text-sm text-muted-foreground block">Status</label>
+                    <select v-model="selectedWaiter.active" class="w-full h-11 rounded-lg border border-border bg-input px-4 text-foreground">
+                        <option :value="true">Ativo</option>
+                        <option :value="false">Inativo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <Button variant="secondary" type="button" @click="cancelWaiterAction">
+                    Cancelar
+                </Button>
+                <Button variant="default" type="submit">
+                    {{ isCreatingWaiter ? 'Cadastrar Garçom' : 'Salvar Alterações' }}
+                </Button>
+            </div>
+        </form>
+    </Modal>
+    
+    <Modal v-if="isEditingRule || isCreatingRule" @close="cancelRuleAction">
+        
+        <template #title>
+            {{ isCreatingRule ? 'Criar Nova Regra' : `Editar Regra: ${getProduct(selectedRule?.productId)?.name}` }}
+        </template>
+
+        <form @submit.prevent="saveRule" class="space-y-4" v-if="selectedRule">
+            
+            <div class="space-y-2">
+                <label class="text-sm text-muted-foreground block">Drink Aplicável</label>
+                <select v-model="selectedRule.productId" 
+                        :disabled="isEditingRule"
+                        class="w-full h-11 rounded-lg border border-border bg-input px-4 text-foreground">
+                    <option value="" disabled>Selecione um Drink</option>
+                    <option v-for="p in drinkProducts" :key="p.id" :value="p.id">
+                        {{ p.name }} 
+                        <span v-if="getProduct(p.id)?.price !== getProduct(p.id)?.originalPrice"> (Preço Alterado)</span>
+                    </option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-sm text-muted-foreground block">% de Aumento</label>
+                    <Input v-model.number="selectedRule.percentageIncrease" type="number" min="1" max="50" required />
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm text-muted-foreground block">Meta de Vendas (unidades)</label>
+                    <Input v-model.number="selectedRule.salesThreshold" type="number" min="1" required />
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm text-muted-foreground block">Status da Regra</label>
+                <select v-model="selectedRule.isActive" class="w-full h-11 rounded-lg border border-border bg-input px-4 text-foreground">
+                    <option :value="true">Ativa (Aplicar aumentos)</option>
+                    <option :value="false">Inativa (Ignorar regra)</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <Button variant="secondary" type="button" @click="cancelRuleAction">
+                    Cancelar
+                </Button>
+                <Button variant="default" type="submit">
+                    {{ isCreatingRule ? 'Criar Regra' : 'Salvar Regra' }}
+                </Button>
+            </div>
+        </form>
+    </Modal>
+
+    <Modal v-if="deleteConfirmation" @close="cancelDeletion">
+        
+        <template #title>
+            Confirmar Exclusão
+        </template>
+
+        <div class="space-y-6">
+            <p class="text-lg text-foreground">
+                Você tem certeza que deseja excluir
+                <span class="font-bold text-destructive">
+                    o(a) {{ deleteConfirmation.type }} "{{ deleteConfirmation.name }}"
+                </span>? 
+            </p>
+            <p class="text-sm text-muted-foreground">
+                Esta ação não pode ser desfeita. Todos os dados relacionados serão perdidos.
+            </p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" type="button" @click="cancelDeletion">
+                Cancelar
+            </Button>
+            <Button variant="destructive" type="button" @click="confirmDeletion">
+                Excluir Permanentemente
+            </Button>
+        </div>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-
-// Componentes UI (Ajuste o caminho se necessário)
 import Button from '@/components/UI/button.vue'; 
 import Input from '@/components/UI/input.vue'; 
-
-// Ícones
+import Modal from '@/components/Modal.vue'; 
 import { Wine, UtensilsCrossed, Users, TrendingUp, Plus, Edit2, Trash2, LogOut, Package, ChefHat, Percent } from 'lucide-vue-next'; 
-
-// Mocks e Tipos
-import { mockProducts, mockWaiters, mockPricingRules } from '@/data/mockData';
+import { useAppStore } from '@/stores/drinkStore';
 import type { Product, Waiter, PricingRule } from '@/data/mockData';
 
-// --- Variáveis de Estado ---
 type Tab = 'products' | 'waiters' | 'pricing';
 type CategoryFilter = 'all' | 'drinks' | 'food' | 'portions';
 
+interface DeletionTarget {
+    id: string;
+    name: string;
+    type: 'produto' | 'garçom' | 'regra';
+    callback: () => void;
+}
+
 const router = useRouter();
+const appStore = useAppStore();
+
 const activeTab = ref<Tab>('products');
-// NOTE: Em uma aplicação real, estes seriam substituídos por estados Pinia
-const products = ref<Product[]>(mockProducts);
-const waiters = ref<Waiter[]>(mockWaiters);
-const pricingRules = ref<PricingRule[]>(mockPricingRules);
 const categoryFilter = ref<CategoryFilter>('all');
 
-// --- Computed Properties e Funções ---
+const isEditing = ref(false);
+const isCreating = ref(false);
+const selectedProduct = ref(null as Product | null); 
+
+const isEditingWaiter = ref(false);
+const isCreatingWaiter = ref(false);
+const selectedWaiter = ref(null as Waiter | null);
+
+const isEditingRule = ref(false);
+const isCreatingRule = ref(false);
+const selectedRule = ref(null as PricingRule | null);
+
+const deleteConfirmation = ref(null as DeletionTarget | null);
+
+const products = computed(() => appStore.products || []);
+const waiters = computed(() => appStore.waiters || []);
+const pricingRules = computed(() => appStore.pricingRules || []);
 
 const filteredProducts = computed(() => {
   if (categoryFilter.value === 'all') return products.value;
@@ -365,9 +570,9 @@ const filteredProducts = computed(() => {
 const drinkProducts = computed(() => products.value.filter(p => p.category === 'drinks'));
 
 const stats = computed(() => [
-  { label: 'Total Produtos', value: products.value.length, icon: Package, color: 'text-primary' },
-  { label: 'Garçons Ativos', value: waiters.value.filter(w => w.active).length, icon: Users, color: 'text-success' }, 
-  { label: 'Regras de Preço', value: pricingRules.value.filter(r => r.isActive).length, icon: TrendingUp, color: 'text-primary' },
+  { label: 'Total Produtos', value: products.value.length, icon: Package, color: 'text-primary bg-primary/20' },
+  { label: 'Garçons Ativos', value: waiters.value.filter(w => w.active).length, icon: Users, color: 'text-success bg-success/20' }, 
+  { label: 'Regras de Preço', value: pricingRules.value.filter(r => r.isActive).length, icon: TrendingUp, color: 'text-primary bg-primary/20' },
 ]);
 
 const getCategoryLabel = (category: string) => {
@@ -407,19 +612,178 @@ const progressPercentage = (productId: string, salesThreshold: number) => {
   const progress = (product.salesCount % salesThreshold) / salesThreshold * 100;
   return Math.min(progress, 100) || 0;
 };
+
+const newProductBase: Omit<Product, 'id' | 'salesCount'> = { 
+  name: '', 
+  description: '', 
+  price: 0, 
+  originalPrice: 0,
+  category: 'drinks', 
+  image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400', 
+  available: true,
+};
+
+const startCreate = () => {
+  selectedProduct.value = { ...newProductBase, id: 'temp', salesCount: 0 } as Product;
+  isCreating.value = true;
+};
+
+const startEdit = (product: Product) => {
+  selectedProduct.value = { ...product }; 
+  isEditing.value = true;
+};
+
+const cancelAction = () => {
+  isEditing.value = false;
+  isCreating.value = false;
+  selectedProduct.value = null;
+};
+
+const saveProduct = () => {
+  if (!selectedProduct.value) return;
+
+  if (isCreating.value) {
+    appStore.addProduct(selectedProduct.value);
+  } else if (isEditing.value) {
+    appStore.updateProduct(selectedProduct.value.id, selectedProduct.value);
+  }
+  
+  cancelAction();
+};
+
+const deleteItem = (productId: string, productName: string) => {
+    deleteConfirmation.value = {
+        id: productId,
+        name: productName,
+        type: 'produto',
+        callback: () => {
+            appStore.deleteProduct(productId);
+            deleteConfirmation.value = null; 
+        }
+    };
+};
+
+const waiterBase: Omit<Waiter, 'id'> = { 
+  name: '', 
+  email: '', 
+  password: '',
+  phone: '', 
+  active: true,
+};
+
+const startCreateWaiter = () => {
+  selectedWaiter.value = { ...waiterBase, id: 'temp', email: '', password: '' } as Waiter;
+  isCreatingWaiter.value = true;
+};
+
+const startEditWaiter = (waiter: Waiter) => {
+  selectedWaiter.value = { ...waiter, password: '' };
+  isEditingWaiter.value = true;
+};
+
+const cancelWaiterAction = () => {
+  isEditingWaiter.value = false;
+  isCreatingWaiter.value = false;
+  selectedWaiter.value = null;
+};
+
+const saveWaiter = () => {
+  if (!selectedWaiter.value) return;
+
+  if (isCreatingWaiter.value) {
+    appStore.addWaiter(selectedWaiter.value);
+  } else if (isEditingWaiter.value) {
+    const updatedData = { ...selectedWaiter.value };
+    if (!updatedData.password) {
+      delete updatedData.password;
+    }
+    appStore.updateWaiter(selectedWaiter.value.id, updatedData);
+  }
+  
+  cancelWaiterAction();
+};
+
+const deleteWaiter = (waiterId: string, waiterName: string) => {
+    deleteConfirmation.value = {
+        id: waiterId,
+        name: waiterName,
+        type: 'garçom',
+        callback: () => {
+            appStore.deleteWaiter(waiterId);
+            deleteConfirmation.value = null; 
+        }
+    };
+};
+
+const ruleBase: Omit<PricingRule, 'id'> = { 
+    productId: '',
+    percentageIncrease: 1, 
+    salesThreshold: 10,
+    isActive: true,
+};
+
+const startCreateRule = () => {
+  selectedRule.value = { ...ruleBase, id: 'temp' } as PricingRule;
+  isCreatingRule.value = true;
+};
+
+const startEditRule = (rule: PricingRule) => {
+  selectedRule.value = { ...rule };
+  isEditingRule.value = true;
+};
+
+const cancelRuleAction = () => {
+  isEditingRule.value = false;
+  isCreatingRule.value = false;
+  selectedRule.value = null;
+};
+
+const saveRule = () => {
+  if (!selectedRule.value) return;
+
+  if (isCreatingRule.value) {
+    appStore.addPricingRule(selectedRule.value);
+  } else if (isEditingRule.value) {
+    appStore.updatePricingRule(selectedRule.value.id, selectedRule.value);
+  }
+  
+  appStore.applyPricingRules(); 
+  cancelRuleAction();
+};
+
+const deleteRule = (ruleId: string, productName: string) => {
+    deleteConfirmation.value = {
+        id: ruleId,
+        name: productName,
+        type: 'regra',
+        callback: () => {
+            appStore.deletePricingRule(ruleId);
+            appStore.applyPricingRules(); 
+            deleteConfirmation.value = null; 
+        }
+    };
+};
+
+
+const confirmDeletion = () => {
+    if (deleteConfirmation.value) {
+        deleteConfirmation.value.callback();
+    }
+};
+
+const cancelDeletion = () => {
+    deleteConfirmation.value = null;
+};
 </script>
 
 <style scoped>
-/* Estilos para o Glassmorphism e gradiente */
 .glass {
   background-color: rgba(255, 255, 255, 0.08); 
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Dourado/Amarelo Queimado (Revisado para um tom mais Âmbar/Ouro) */
 .gradient-gold {
-  /* Substituindo o tom anterior (mais laranja) por um âmbar/ouro mais profundo */
   background-image: linear-gradient(to right top, #b45309, #d97706, #fbbf24); 
 }
 </style>
