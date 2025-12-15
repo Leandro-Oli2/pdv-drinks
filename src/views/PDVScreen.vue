@@ -252,6 +252,6 @@ const handleLogout = () => {
 .glass-card {
   background-color: rgba(255, 255, 255, 0.05); 
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
+  border-radius: 0.6rem;
 }
 </style>
